@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>VORTEX MD | Mini BOT</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <style>
+    :root { --primary-color:#a855f7; --secondary-color:#ff7eb3; --accent-color:#00d4aa; }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{font-family:'Poppins',sans-serif;background:#0a0a0f;color:white;min-height:100vh;position:relative;overflow-x:hidden}
+    #bg-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+    .container{position:relative;z-index:10;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px}
+    .card{width:100%;max-width:480px;background:rgba(20,20,30,.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.15);border-radius:30px;padding:40px 30px;box-shadow:0 20px 80px rgba(0,0,0,.6);position:relative;overflow:hidden;animation:slideIn .6s ease}
+    @keyframes slideIn{from{opacity:0;transform:translateY(50px)}to{opacity:1;transform:translateY(0)}}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,transparent,#a855f7,#ffeb3b,#00d4aa,transparent);transition:background .5s ease}
+    .header{text-align:center;margin-bottom:30px}.logo-container{width:95px;height:95px;margin:0 auto 20px;position:relative}
+    .logo-ring{position:absolute;top:0;left:0;width:100%;height:100%;border:3px solid transparent;border-top-color:#a855f7;border-bottom-color:#00d4aa;border-radius:50%;animation:spin 3s linear infinite}
+    @keyframes spin{to{transform:rotate(360deg)}}.logo{width:100%;height:100%;background:linear-gradient(135deg,#a855f7 0%,#ffeb3b 100%);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:38px;color:#1a1a1a;box-shadow:0 0 25px rgba(168,85,247,.6)}
+    
+    /* نام کا خوبصورت ڈیزائن اور کلر */
+    .title{font-size:30px;font-weight:800;letter-spacing:1px;margin-bottom:8px;background:linear-gradient(135deg,#a855f7 0%,#ffeb3b 50%,#00d4aa 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-shadow:0 0 30px rgba(168,85,247,0.4)}
+    
+    .subtitle{font-size:14px;color:rgba(255,255,255,.6);font-weight:400}
+    .server-info{background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);border-radius:16px;padding:15px;margin-bottom:20px;display:flex;align-items:center;justify-content:between;gap:12px;cursor:pointer;transition:all .3s ease}
+    .server-info:hover{background:rgba(168,85,247,.15);border-color:rgba(168,85,247,.5);transform:translateY(-2px)}
+    .server-info-left{display:flex;align-items:center;gap:12px}.server-info-left i{color:#a855f7;font-size:20px}.server-details{flex:1}.server-name{display:block;font-weight:600;font-size:14px;margin-bottom:2px}
+    .server-stats{display:flex;gap:15px;font-size:12px;color:rgba(255,255,255,.7)}.server-stat{display:flex;align-items:center;gap:4px}.server-stat i{font-size:10px}
+    .change-server-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:white;padding:8px 16px;border-radius:10px;font-size:12px;font-weight:500;cursor:pointer;transition:all .3s ease;white-space:nowrap}
+    .change-server-btn:hover{background:rgba(255,255,255,.15);transform:translateY(-2px)}
+    .server-selection{display:none;background:rgba(15,15,25,.95);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:20px;margin-bottom:20px;max-height:300px;overflow-y:auto}
+    .server-selection.show{display:block;animation:fadeIn .3s ease}@keyframes fadeIn{from{opacity:0;transform:translateY(-10px)}to{opacity:1;transform:translateY(0)}}
+    .server-selection-title{font-size:16px;font-weight:600;margin-bottom:15px;color:rgba(255,255,255,.9);text-align:center}.server-grid{display:grid;grid-template-columns:1fr;gap:10px}
+    .server-option{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:15px;cursor:pointer;transition:all .3s ease;display:flex;align-items:center;justify-content:space-between}
+    .server-option:hover{background:rgba(168,85,247,.1);border-color:rgba(168,85,247,.4);transform:translateY(-2px)}.server-option.selected{background:rgba(168,85,247,.2);border-color:#a855f7}
+    .server-option-name{font-weight:500;font-size:14px;color:rgba(255,255,255,.9)}.server-option-stats{display:flex;gap:10px;font-size:12px;color:rgba(255,255,255,.7)}
+    .info-box{background:rgba(168,85,247,.1);border:1px solid rgba(168,85,247,.3);border-radius:16px;padding:18px;margin-bottom:25px;display:flex;align-items:flex-start;gap:12px}
+    .info-box i{color:#a855f7;font-size:20px;margin-top:2px}.info-box-text{flex:1}.info-box-text strong{display:block;margin-bottom:4px;font-size:15px}.info-box-text p{font-size:13px;color:rgba(255,255,255,.7);line-height:1.5}
+    .form-group{margin-bottom:20px}.label{display:block;margin-bottom:10px;font-weight:500;font-size:14px;color:rgba(255,255,255,.9)}.input-wrapper{position:relative}
+    .input-icon{position:absolute;left:20px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,.5);font-size:18px}
+    .input{width:100%;padding:16px 20px 16px 55px;background:rgba(255,255,255,.05);border:2px solid rgba(255,255,255,.1);border-radius:16px;color:white;font-size:15px;font-family:inherit;transition:all .3s ease}
+    .input:focus{outline:none;border-color:#a855f7;background:rgba(255,255,255,.08);box-shadow:0 0 0 4px rgba(168,85,247,.15)}.input::placeholder{color:rgba(255,255,255,.4)}
+    .hint{font-size:12px;color:rgba(255,255,255,.5);margin-top:8px;display:flex;align-items:center;gap:6px}.hint i{font-size:11px}
+    .btn{width:100%;padding:16px;border:none;border-radius:16px;font-size:16px;font-weight:600;font-family:inherit;cursor:pointer;transition:all .3s ease;display:flex;align-items:center;justify-content:center;gap:10px}
+    .btn-generate{background:linear-gradient(135deg,#a855f7 0%,#ffeb3b 100%);color:#1a1a1a;box-shadow:0 10px 30px rgba(168,85,247,.3);margin-bottom:15px;font-weight:700}
+    .btn-generate:hover:not(:disabled){transform:translateY(-3px);box-shadow:0 15px 40px rgba(168,85,247,.5)}.btn-generate:disabled{opacity:.7;cursor:not-allowed}
+    .btn-copy{background:rgba(255,255,255,.1);color:white;border:1px solid rgba(255,255,255,.2);display:none}.btn-copy:hover{background:rgba(255,255,255,.15);transform:translateY(-2px)}
+    .loading{display:none;text-align:center;margin:20px 0}.spinner{width:45px;height:45px;border:4px solid rgba(168,85,247,.2);border-radius:50%;border-top-color:#a855f7;animation:spin 1s linear infinite;margin:0 auto 12px}
+    .code-box{background:rgba(0,0,0,.4);border:2px solid rgba(255,255,255,.1);border-radius:16px;padding:20px;text-align:center;margin-bottom:15px;min-height:70px;display:flex;align-items:center;justify-content:center;transition:all .3s ease}
+    .code-box.has-code{border-color:rgba(0,212,170,.5);background:rgba(0,212,170,.05)}.code-box.has-error{border-color:rgba(255,107,107,.5);background:rgba(255,107,107,.05)}
+    .code-placeholder{color:rgba(255,255,255,.4);font-size:14px}.code-value{font-size:24px;font-weight:700;letter-spacing:3px;color:#00d4aa;font-family:'Courier New',monospace;display:flex;align-items:center;gap:12px}.code-value i{font-size:22px}
+    .error-value{color:#ff6b6b;font-size:14px;display:flex;align-items:center;gap:10px}.footer{text-align:center;margin-top:25px;padding-top:20px;border-top:1px solid rgba(255,255,255,.1)}
+    .footer-text{font-size:12px;color:rgba(255,255,255,.4)}.toast{position:fixed;bottom:30px;left:50%;transform:translateX(-50%) translateY(150px);background:#00d4aa;color:white;padding:14px 24px;border-radius:50px;font-weight:500;box-shadow:0 10px 40px rgba(0,212,170,.4);transition:all .4s cubic-bezier(.68,-.55,.265,1.55);z-index:1000;opacity:0;display:flex;align-items:center;gap:10px;font-size:14px}.toast.show{transform:translateX(-50%) translateY(0);opacity:1}.toast.error{background:#ff6b6b}
+  </style>
+</head>
+<body>
+<canvas id="bg-canvas"></canvas>
+<div class="container"><div class="card">
+<div class="header">
+  <div class="logo-container">
+    <div class="logo-ring"></div>
+    <!-- آپ یہاں لوگو کا آئیکن یا تصویر بدل سکتے ہیں -->
+    <div class="logo" style="overflow: hidden;"><img src="https://raw.githubusercontent.com/abdulraheemsamoo79-lgtm/VORTEX-MD/main/assets/logo.png" alt="Logo" style="width: 100%; height: 100%; object-fit: cover;"></div>
+  </div>
+  <h1 class="title">VORTEX MD</h1>
+  <p class="subtitle">Generate Your Pairing Code</p>
+</div>
+
+<div class="server-info" id="serverInfo">
+  <div class="server-info-left">
+    <i class="fas fa-server"></i>
+    <div class="server-details">
+      <span class="server-name" id="currentServerName">Select Server</span>
+      <div class="server-stats">
+        <span class="server-stat" id="activeCount"><i class="fas fa-circle" style="color:#00d4aa;"></i> Active: --</span>
+        <span class="server-stat" id="serverLimit"><i class="fas fa-users"></i> Limit: --/50</span>
+      </div>
+    </div>
+  </div>
+  <div class="change-server-btn"><i class="fas fa-chevron-down"></i> Select</div>
+</div>
+
+<div class="server-selection" id="serverSelection">
+  <div class="server-selection-title">Select a Server</div>
+  <div class="server-grid" id="serverGrid"></div>
+</div>
+
+<div class="info-box"><i class="fas fa-info-circle"></i><div class="info-box-text"><strong>Quick Setup</strong><p>Select a server, enter your WhatsApp number to instantly generate a pairing code. No deployment needed!</p></div></div>
+
+<form id="pairForm">
+  <div class="form-group">
+    <label class="label">WhatsApp Number</label>
+    <div class="input-wrapper">
+      <input type="tel" id="phoneNumber" class="input" placeholder="923001234567" pattern="[0-9]+" required>
+      <i class="fas fa-phone input-icon"></i>
+    </div>
+    <div class="hint"><i class="fas fa-lightbulb"></i> Include country code (e.g., 92 for Pakistan)</div>
+  </div>
+  <button type="submit" class="btn btn-generate" id="generateBtn" disabled><i class="fas fa-key"></i> Generate Pair Code</button>
+  <div class="loading" id="loading"><div class="spinner"></div><p class="loading-text">Generating your pair code...</p></div>
+  <div class="code-box" id="codeBox"><div class="code-placeholder">Your pairing code will appear here</div></div>
+  <button type="button" class="btn btn-copy" id="copyBtn"><i class="fas fa-copy"></i> Copy Code</button>
+</form>
+
+<div class="footer"><p class="footer-text">© 2026 VORTEX MD | Powered By AR SAMOON</p></div>
+</div></div>
+
+<div class="toast" id="toast"><i class="fas fa-check-circle"></i><span>Code copied successfully</span></div>
+
+<script>
+let scene,camera,renderer,particlesMesh;const canvas=document.getElementById('bg-canvas');
+function init3DBackground(){scene=new THREE.Scene();camera=new THREE.PerspectiveCamera(75,innerWidth/innerHeight,.1,1000);renderer=new THREE.WebGLRenderer({canvas,alpha:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));const geometry=new THREE.BufferGeometry(),count=1500,positions=new Float32Array(count*3);for(let i=0;i<count*3;i++)positions[i]=(Math.random()-.5)*10;geometry.setAttribute('position',new THREE.BufferAttribute(positions,3));const material=new THREE.PointsMaterial({size:.02,color:0xff758c,transparent:true,opacity:.8});particlesMesh=new THREE.Points(geometry,material);scene.add(particlesMesh);camera.position.z=3;let mouseX=0,mouseY=0;addEventListener('mousemove',e=>{mouseX=e.clientX/innerWidth-.5;mouseY=e.clientY/innerHeight-.5});const clock=new THREE.Clock();function animate(){requestAnimationFrame(animate);const t=clock.getElapsedTime();particlesMesh.rotation.y=t*.05+mouseX*.5;particlesMesh.rotation.x=t*.03+mouseY*.5;renderer.render(scene,camera)}animate();addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)})}
+
+let SERVERS = [];
+const phoneInput=document.getElementById('phoneNumber'),generateBtn=document.getElementById('generateBtn'),loading=document.getElementById('loading'),codeBox=document.getElementById('codeBox'),copyBtn=document.getElementById('copyBtn'),toast=document.getElementById('toast'),form=document.getElementById('pairForm'),serverInfo=document.getElementById('serverInfo'),serverSelection=document.getElementById('serverSelection'),serverGrid=document.getElementById('serverGrid'),currentServerName=document.getElementById('currentServerName'),activeCount=document.getElementById('activeCount'),serverLimit=document.getElementById('serverLimit');
+let currentCode=null,selectedServer=null,serverStatus={};
+
+async function initApp(){
+  init3DBackground();
+  try{ const sr = await fetch('/api/servers'); if(sr.ok) SERVERS = await sr.json(); }catch(e){}
+  renderServers();
+  if(SERVERS.length > 0){
+    await selectServer(SERVERS[0].id);
+  } else {
+    currentServerName.textContent = "No Servers Available";
+    activeCount.innerHTML = `<i class="fas fa-circle" style="color:#ff6b6b;"></i> Active: 0`;
+    serverLimit.innerHTML = `<i class="fas fa-users"></i> Limit: 0/50`;
+  }
+  serverInfo.addEventListener('click',showServerSelection);
+  startLiveStatusPolling();
+}
+
+function renderServers(){
+  serverGrid.innerHTML='';
+  if(!SERVERS.length){serverGrid.innerHTML='<div style="text-align:center;color:rgba(255,255,255,.5);padding:10px;font-size:13px;">No servers found</div>';return;}
+  SERVERS.forEach(s=>{
+    const st=serverStatus[s.id];
+    const o=document.createElement('div');
+    o.className=`server-option ${selectedServer==s.id?'selected':''}`;
+    let statText='Click to select';
+    if(st){
+      if(st.error) statText='Offline';
+      else if(st.count>=st.limit) statText='Full';
+      else statText=st.count===null?'Active: --':`Active: ${st.count}`;
+    }
+    o.innerHTML=`<div class="server-option-name">${escapeHtml(s.name)}</div><div class="server-option-stats"><span>${statText}</span></div>`;
+    o.addEventListener('click',()=>selectServer(s.id));
+    serverGrid.appendChild(o);
+  });
+}
+
+function escapeHtml(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))}
+
+async function selectServer(id){
+  selectedServer=id;
+  await updateServerStatus(id);
+  hideServerSelection();
+}
+
+async function updateServerStatus(id){
+  try{
+    const r=await axios.get('api/proxy',{params:{server:id,action:'active'},timeout:10000});
+    const d=r.data||{};
+    const users = Array.isArray(d.users) ? d.users : (Array.isArray(d.activeUsers) ? d.activeUsers : (Array.isArray(d.numbers) ? d.numbers : null));
+    let rawCount = d.count ?? d.activeCount ?? d.totalActive ?? d.onlineCount ?? d.usersCount;
+    if (rawCount === undefined || rawCount === null) {
+      if (typeof d.active === 'number' || (typeof d.active === 'string' && /^\\d+$/.test(d.active))) rawCount = d.active;
+      else if (users !== null) rawCount = users.length;
+      else if (typeof d.users === 'number' || (typeof d.users === 'string' && /^\\d+$/.test(d.users))) rawCount = d.users;
+    }
+    const count = (rawCount !== undefined && rawCount !== null && rawCount !== '' && Number.isFinite(Number(rawCount))) ? Math.max(0, Number(rawCount)) : null;
+    const limit=Number(d.limit||50);
+    serverStatus[id]={error:false,count,limit};
+    const s=SERVERS.find(x=>x.id===id);
+    currentServerName.textContent=s?s.name:`Server ${id}`;
+    activeCount.innerHTML=`<i class="fas fa-circle" style="color:${count===null?'#ffeb3b':'#00d4aa'};"></i> Active: ${count===null?'--':count}`;
+    serverLimit.innerHTML=`<i class="fas fa-users"></i> Limit: ${count===null?'--':count}/${limit}`;
+    generateBtn.disabled=count===null || count>=limit;
+    generateBtn.innerHTML='<i class="fas fa-key"></i> Generate Pair Code';
+    renderServers();
+  }catch(e){
+    serverStatus[id]={error:true};
+    const s=SERVERS.find(x=>x.id===id);
+    currentServerName.textContent=s?s.name:`Server ${id}`;
+    activeCount.innerHTML=`<i class="fas fa-circle" style="color:#ff6b6b;"></i> Active: Offline`;
+    serverLimit.innerHTML=`<i class="fas fa-users"></i> Limit: --/50`;
+    generateBtn.disabled=true;
+    renderServers();
+  }
+}
+
+// Refresh live user count automatically; no page refresh needed.
+let statusPollTimer = null;
+function startLiveStatusPolling(){
+  if(statusPollTimer) clearInterval(statusPollTimer);
+  statusPollTimer = setInterval(() => {
+    if (selectedServer && !document.hidden && !serverSelection.classList.contains('show')) {
+      updateServerStatus(selectedServer);
+    }
+  }, 5000);
+}
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden && selectedServer) updateServerStatus(selectedServer);
+});
+
+function showServerSelection(){serverInfo.style.display='none';serverSelection.style.display='block';serverSelection.classList.add('show');generateBtn.disabled=true;renderServers();}
+function hideServerSelection(){serverInfo.style.display='flex';serverSelection.style.display='none';serverSelection.classList.remove('show')}
+function showToast(msg,err=false){toast.querySelector('i').className=err?'fas fa-exclamation-circle':'fas fa-check-circle';toast.querySelector('span').textContent=msg;toast.className=`toast ${err?'error':''} show`;setTimeout(()=>toast.classList.remove('show'),3000)}
+function validatePhone(n){const c=n.replace(/[^\d]/g,'');return c.length>=10&&c.length<=15}
+function showError(m){codeBox.className='code-box has-error';codeBox.innerHTML=`<div class="error-value"><i class="fas fa-exclamation-circle"></i><span>${escapeHtml(m)}</span></div>`;copyBtn.style.display='none'}
+function showCode(c){currentCode=c;codeBox.className='code-box has-code';codeBox.innerHTML=`<div class="code-value"><i class="fas fa-check-circle"></i><span>${escapeHtml(c)}</span></div>`;copyBtn.style.display='flex'}
+function resetCodeBox(){codeBox.className='code-box';codeBox.innerHTML='<div class="code-placeholder">Your pairing code will appear here</div>';copyBtn.style.display='none';currentCode=null}
+
+async function generatePairCode(e){
+  e.preventDefault();
+  if(!selectedServer){showError('Please select a server first');showToast('Click on "Select Server" to choose a server',true);showServerSelection();return}
+  const number=phoneInput.value.trim();
+  if(!number||!validatePhone(number)){showError('Please enter a valid phone number');showToast('Invalid phone number format',true);return}
+  generateBtn.style.display='none';loading.style.display='block';resetCodeBox();
+  try{
+    const r=await axios.get('api/proxy',{params:{server:selectedServer,action:'code',number:number.replace(/[^\d]/g,'')},timeout:20000});
+    if(r.data&&r.data.code){
+      showCode(r.data.code);
+      showToast('Pair code generated successfully!');
+      await updateServerStatus(selectedServer);
+    }else throw new Error(r.data.error||'Failed to generate code');
+  }catch(e){
+    const errText=e.response?.data?.error||e.message||'Failed to generate code. Please try again.';
+    showError(errText);
+    showToast('Error generating code',true);
+  }finally{
+    generateBtn.style.display='flex';
+    loading.style.display='none';
+  }
+}
+
+async function copyCode(){
+  if(!currentCode)return;
+  try{
+    if(navigator.clipboard&&window.isSecureContext){
+      await navigator.clipboard.writeText(currentCode);
+    }else{
+      const ta=document.createElement('textarea');
+      ta.value=currentCode;ta.setAttribute('readonly','');
+      ta.style.position='fixed';ta.style.left='-9999px';
+      document.body.appendChild(ta);ta.focus();ta.select();
+      document.execCommand('copy');document.body.removeChild(ta);
+    }
+    const h=copyBtn.innerHTML;
+    copyBtn.innerHTML='<i class="fas fa-check"></i> Copied!';
+    copyBtn.disabled=true;copyBtn.style.opacity='.7';
+    showToast('Code copied to clipboard!');
+    setTimeout(()=>{copyBtn.innerHTML=h;copyBtn.disabled=false;copyBtn.style.opacity='1'},2000);
+  }catch(e){showToast('Failed to copy code',true);}
+}
+
+form.addEventListener('submit',generatePairCode);
+copyBtn.addEventListener('click',copyCode);
+phoneInput.addEventListener('input',e=>e.target.value=e.target.value.replace(/[^\d]/g,''));
+phoneInput.addEventListener('focus',()=>{if(codeBox.classList.contains('has-error'))resetCodeBox()});
+document.addEventListener('DOMContentLoaded',initApp);
+</script>
+</body>
+</html>
