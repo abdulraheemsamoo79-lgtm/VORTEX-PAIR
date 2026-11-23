@@ -2,7 +2,7 @@
   {
     "id": "server1",
     "name": "SERVER 01",
-    "url": "https://vortex-md-server1.up.railway.app",
+    "url": "https://vortex-md-production-ade39237.up.railway.app",
     "limit": 50
   }
 ]
